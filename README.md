@@ -51,8 +51,39 @@ CODEX_TIMEOUT_SEC=600
 - `/help` - список команд
 - `/ping` - проверка доступности
 - `/status` - показать текущий `thread_id` Codex
+- `/encryption` - статус шифрования текущего чата
 - `/reset` - сбросить текущую сессию Codex
 - Любой другой текст - отправка в Codex
+
+## SecureJoin (E2E setup контакта)
+
+Для безопасного обмена ключами добавлен скрипт `securejoin_once.py`.
+
+Важно: invite-link/QR данные SecureJoin не нужно отправлять в тот же чат,
+если он еще не подтвержден как E2E. Передавайте их офлайн или по отдельному
+доверенному E2E-каналу.
+
+Запуск:
+
+```bash
+systemctl --user stop deltachat-bot.service
+cd /home/openclaw/deltachat-bot
+source .venv/bin/activate
+./securejoin_once.py
+# вставьте invite-link (https://i.delta.chat/...) и нажмите Enter
+systemctl --user start deltachat-bot.service
+```
+
+Альтернатива через переменную окружения:
+
+```bash
+SECUREJOIN_QRDATA='https://i.delta.chat/...' ./securejoin_once.py
+```
+
+Проверка результата:
+
+1. Напишите боту `/encryption`.
+2. Убедитесь, что в выводе есть E2E для контакта.
 
 ## Установка на Raspberry Pi
 
