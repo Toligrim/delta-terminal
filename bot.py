@@ -162,6 +162,14 @@ def send_reply(chat, text: str) -> None:
         chat.send_text(chunk)
 
 
+def get_chat_encryption_info(event) -> str:
+    try:
+        info = event.message_snapshot.chat.get_encryption_info()
+    except Exception as exc:
+        return f"Не удалось получить encryption info: {exc}"
+    return (info or "").strip() or "Encryption info недоступен."
+
+
 def on_help(event):
     if not is_allowed_sender(event):
         return
@@ -170,6 +178,7 @@ def on_help(event):
         "/help - помощь\n"
         "/ping - проверка доступности\n"
         "/status - текущий thread id Codex\n"
+        "/encryption - статус шифрования текущего чата\n"
         "/reset - сбросить сессию Codex\n"
         "Любой другой текст отправляется в Codex."
     )
@@ -197,6 +206,12 @@ def on_reset(event):
     event.message_snapshot.chat.send_text("Сессия Codex сброшена.")
 
 
+def on_encryption(event):
+    if not is_allowed_sender(event):
+        return
+    send_reply(event.message_snapshot.chat, get_chat_encryption_info(event))
+
+
 def on_text(event):
     if not is_allowed_sender(event):
         return
@@ -205,7 +220,9 @@ def on_text(event):
         return
 
     sender = get_sender_address(event)
+    encryption_info = get_chat_encryption_info(event).replace("\n", " | ")
     logging.info("Incoming message from %s", sender)
+    logging.info("Chat encryption info: %s", encryption_info)
     chat = event.message_snapshot.chat
     chat.send_text("Принято. Отправляю запрос в Codex...")
     try:
@@ -231,6 +248,7 @@ if __name__ == "__main__":
         (on_help, NewMessage(command="/help")),
         (on_ping, NewMessage(command="/ping")),
         (on_status, NewMessage(command="/status")),
+        (on_encryption, NewMessage(command="/encryption")),
         (on_reset, NewMessage(command="/reset")),
         (on_text, NewMessage(is_info=False)),
     ]
